@@ -7,21 +7,41 @@ from pyimzml.ImzMLParser import ImzMLParser, getionimage
 app = Dash(__name__)
 
 app.layout = html.Div([
-    html.Div(html.H1('TIMSvision')),
-    html.Div(html.H4('Input imzML File')),
-    html.Div([dcc.Input(id='path', placeholder='imzML file', type='text')]),
-    html.Div(html.H5('m/z')),
-    html.Div([dcc.Input(id='mass', value=0, type='text')]),
-    html.Div(html.H5('m/z tolerance')),
-    html.Div([dcc.Input(id='mass_tol', value=0, type='text')]),
-    html.Div(html.H5('1/k0')),
-    html.Div([dcc.Input(id='ook0', value=0, type='text')]),
-    html.Div(html.H5('1/k0 tolerance')),
-    html.Div([dcc.Input(id='ook0_tol', value=0, type='text')]),
-    html.Div(html.H5('')),
-    html.Div(html.Button('Update Plots', id='update')),
-    html.Div(dcc.Graph(id='image', figure={}, className='row')),
-    html.Div(dcc.Graph(id='contour', figure={}, className='row')),
+    html.Div(children=[
+        html.H1('TIMSvision')
+    ], style={'display': 'flex', 'justifyContent': 'center'}, className='row'),
+
+    html.Div(children=[
+        html.Div(children=[
+            html.H4('Input imzML File')
+        ], style={'display': 'flex', 'justifyContent': 'center'}),
+        html.Div(children=[
+            dcc.Input(id='path', placeholder='imzML File', type='text')
+        ], style={'display': 'flex', 'justifyContent': 'center', 'width': '100%'})
+    ], className='row'),
+
+    html.Div(children=[
+        html.Div(children=[
+            html.H5('m/z'),
+            dcc.Input(id='mass', value=0, type='text'),
+            html.H5('m/z Tolerance'),
+            dcc.Input(id='mass_tol', value=0, type='text'),
+            html.H5('1/K0'),
+            dcc.Input(id='ook0', value=0, type='text'),
+            html.H5('1/K0 Tolerance'),
+            dcc.Input(id='ook0_tol', value=0, type='text'),
+            html.Div(html.H5('')),
+            html.Div(html.Button('Update Plots', id='update')),
+        ], style={'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '3vw', 'margin-right': '3vw'}),
+        html.Div(children=[
+            dcc.Graph(id='image', figure={})
+        ], style={'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '3vw', 'margin-right': '3vw'})
+    ], className='row'),
+
+    html.Div(children=[
+        dcc.Graph(id='contour', figure={}),
+    ], className='row'),
+
     dcc.Store(id='stored_path')
 ], style={'font-family': 'Lucida Sans Unicode'})
 
