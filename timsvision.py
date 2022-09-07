@@ -8,11 +8,7 @@ from pyimzml.ImzMLParser import ImzMLParser, getionimage
 app = Dash(__name__)
 
 app.layout = html.Div([
-    #html.Div(children=[
-    #    html.H1('TIMSvision')
-    #], style={'display': 'flex', 'justifyContent': 'center'}, className='row'),
     html.Div(children=[
-        #html.Img(src=app.get_asset_url(os.path.join(os.getcwd(), 'timsvision_logo.png')))
         html.Img(src='assets/timsvision_logo_mini.png', alt='TIMSvision Logo')
     ], style={'display': 'flex', 'justifyContent': 'center'}, className='row'),
 
