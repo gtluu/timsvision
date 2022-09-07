@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -7,8 +8,12 @@ from pyimzml.ImzMLParser import ImzMLParser, getionimage
 app = Dash(__name__)
 
 app.layout = html.Div([
+    #html.Div(children=[
+    #    html.H1('TIMSvision')
+    #], style={'display': 'flex', 'justifyContent': 'center'}, className='row'),
     html.Div(children=[
-        html.H1('TIMSvision')
+        #html.Img(src=app.get_asset_url(os.path.join(os.getcwd(), 'timsvision_logo.png')))
+        html.Img(src='assets/timsvision_logo_mini.png', alt='TIMSvision Logo')
     ], style={'display': 'flex', 'justifyContent': 'center'}, className='row'),
 
     html.Div(children=[
@@ -95,4 +100,4 @@ def update_inputs(coords):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False, port=8050)
+    app.run_server(debug=False, port=8051)
