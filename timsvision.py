@@ -9,34 +9,49 @@ app = Dash(__name__)
 
 app.layout = html.Div([
     html.Div(children=[
-        html.Img(src='assets/timsvision_logo_mini.png', alt='TIMSvision Logo')
-    ], style={'display': 'flex', 'justifyContent': 'center'}, className='row'),
+        html.Img(src='assets/timsvision_logo_mini.png', alt='TIMSvision Logo', width="375")
+    ], style={'display': 'flex', 'justifyContent': 'center', 'padding': '25px'}, className='row'),
 
     html.Div(children=[
         html.Div(children=[
-            html.H4('Input imzML File')
-        ], style={'display': 'flex', 'justifyContent': 'center'}),
+            html.H4('Input imzML File:'),
+        ], style={'display': 'flex', 'justifyContent': 'center', 'font-family': 'Times New Roman', 'font-size': '22px', 'width': '1440px', 'height': '25px', 'position':'relative', 'top':'-35px'}),
         html.Div(children=[
             dcc.Input(id='path', placeholder='imzML File', type='text')
-        ], style={'display': 'flex', 'justifyContent': 'center', 'width': '100%'})
+        ], style={'display': 'flex', 'justifyContent': 'center', 'width': '100%', 'padding' : '10px'})
     ], className='row'),
 
     html.Div(children=[
         html.Div(children=[
-            html.H5('m/z'),
+            html.H5('m/z:'),
+        ], style={'display': 'inline-block', 'position':'relative', 'top':'90px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        html.Div(children=[
             dcc.Input(id='mass', value=0, type='text'),
-            html.H5('m/z Tolerance'),
+        ], style={'position':'relative', 'top':'65px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        html.Div(children=[
+            html.H5('m/z Tolerance:'),
+        ], style={'position':'relative', 'top':'60px', 'display': 'inline-block','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        html.Div(children=[
             dcc.Input(id='mass_tol', value=0, type='text'),
-            html.H5('1/K0'),
+        ], style={'position':'relative', 'top':'35px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        html.Div(children=[
+            html.H5('1/K0:'),
+        ], style={'position':'relative', 'top':'30px', 'display': 'inline-block','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        html.Div(children=[
             dcc.Input(id='ook0', value=0, type='text'),
-            html.H5('1/K0 Tolerance'),
+        ], style={'position':'relative', 'top':'5px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        html.Div(children=[
+            html.H5('1/K0 Tolerance:'),
+        ], style={'position':'relative', 'top':'0px', 'display': 'inline-block', 'font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        html.Div(children=[
             dcc.Input(id='ook0_tol', value=0, type='text'),
-            html.Div(html.H5('')),
+        ], style={'position':'relative', 'top':'-25px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        html.Div(children=[
             html.Div(html.Button('Update Plots', id='update')),
-        ], style={'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '3vw', 'margin-right': '3vw'}),
+        ], style={'border-radius': '20px', 'display': 'inline-block', 'margin-right': '9vw', 'font-family': 'Times New Roman', 'font-size': '25px', 'position':'relative', 'top':'-10px', 'padding-left': '140px'}),
         html.Div(children=[
             dcc.Graph(id='image', figure={})
-        ], style={'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '3vw', 'margin-right': '3vw'})
+        ], style={'border': '1px solid black','display': 'inline-block', 'vertical-align': 'top', 'position':'relative', 'top':'-350px',})
     ], className='row'),
 
     html.Div(children=[
