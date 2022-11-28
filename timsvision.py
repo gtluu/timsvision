@@ -21,13 +21,14 @@ app.layout = html.Div([
         ], style={'display': 'flex', 'justifyContent': 'center', 'width': '100%', 'padding' : '10px'})
     ], className='row'),
 
+#blue border #0047AB
     html.Div(children=[
         html.Div(children=[
             html.H5('m/z:'),
         ], style={'display': 'inline-block', 'position':'relative', 'top':'90px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
         html.Div(children=[
             dcc.Input(id='mass', value=0, type='text'),
-        ], style={'position':'relative', 'top':'65px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
+        ], style={'position':'relative', 'top':'65px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px', 'border-color': '#0047AB'}),
         html.Div(children=[
             html.H5('m/z Tolerance:'),
         ], style={'position':'relative', 'top':'60px', 'display': 'inline-block','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
@@ -51,11 +52,14 @@ app.layout = html.Div([
         ], style={'border-radius': '20px', 'display': 'inline-block', 'margin-right': '9vw', 'font-family': 'Times New Roman', 'font-size': '25px', 'position':'relative', 'top':'-10px', 'padding-left': '140px'}),
         html.Div(children=[
             dcc.Graph(id='image', figure={})
-        ], style={'border': '1px solid black','display': 'inline-block', 'vertical-align': 'top', 'position':'relative', 'top':'-350px',})
+        ], style={'border': '1px solid black','display': 'inline-block', 'vertical-align': 'top', 'position':'relative', 'top':'-350px'})
     ], className='row'),
 
+#label table, shift second table
     html.Div(children=[
-        dcc.Graph(id='contour', figure={}),
+        html.Div(children=[
+            dcc.Graph(id='contour', figure={}),
+        ], style = {'border': '1px solid black', 'position':'relative', 'top':'-250px', 'width': '1250px', 'margin-right': '10vw'})
     ], className='row'),
 
     dcc.Store(id='stored_path')
