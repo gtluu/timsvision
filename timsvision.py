@@ -14,7 +14,7 @@ app.layout = html.Div([
         html.Img(src='assets/timsvision_logo_mini.png', alt='TIMSvision Logo', width="375")
     ], style={'display': 'flex', 'justifyContent': 'center', 'padding': '25px'}, className='row'),
 
-#shift down
+#shifit down
     html.Div(children=[
         html.Div(children=[
             html.H4('Input imzML File:'),
@@ -90,7 +90,14 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
         mobility_array = np.zeros(0)
 
         start = time.time()
+        data = ImzMLParser(path, include_spectra_metadata='full', include_mobility=True)
+        print('loop time flag: ' + str((time.time() - start)))
+        current = time.time()
+        mz_array = np.zeros(0)
+        intensity_array = np.zeros(0)
+        mobility_array = np.zeros(0)
         for i in range(0, len(data.coordinates)):
+            startLoopTime = time.time()
             mzs, ints, mobs = data.getspectrum(i)
             mz_array = np.append(mz_array, mzs) #1
             intensity_array = np.append(intensity_array, ints)  #2
@@ -104,19 +111,21 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
         start = time.time()
         contour = data_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
         contour = contour[contour['intensity'] >= (np.max(contour['intensity']) * 0.0002)]
+
         ion_image = getionimage(data, mz_value=float(mass), mz_tol=float(mass_tol),
                                 mob_value=float(ook0), mob_tol=float(ook0_tol))
         print('ion time flag: ' + str((time.time() - start)))
 
-        conn = sq.connect('{}.sqlite'.format('timsvisions_extension')) # creates file
-        data_df.to_sql('timsvisions_extension', conn, if_exists='replace', index=False) # writes to file
-        conn.close() # good practice: close connection
+        conn = sq.connect('{}.sqlite'.format('timsvisions_extension'))
+        data_df.to_sql('timsvisions_extension', conn, if_exists='replace', index=False) 
+        conn.close() 
+
+        ion_image = getionimage(data, mz_value=float(mass), mz_tol=float(mass_tol), mob_value=float(ook0), mob_tol=float(ook0_tol))
 
         start = time.time()
         contour_plot = px.density_contour(data_frame=contour, x='mz', y='mobility',
                                           marginal_x='histogram', marginal_y='histogram', histfunc='sum',
                                           nbinsx=20000, nbinsy=len(set(contour['mobility'])) // 2)
-        #print(contour_plot)
         print('contour time flag: ' + str((time.time() - start)))
 
         start = time.time()
@@ -129,6 +138,7 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
 @app.callback(Output(component_id='mass', component_property='value'),
               Output(component_id='ook0', component_property='value'),
               Input('contour', 'clickData'),)
+
 def update_inputs(coords):
     mass = coords['points'][0]['x']
     ook0 = coords['points'][0]['y']
