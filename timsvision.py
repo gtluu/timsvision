@@ -82,10 +82,13 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
     changed_id = [i['prop_id'] for i in callback_context.triggered][0]
 
     if 'update' in changed_id:
+        start = time.time()
         data = ImzMLParser(path, include_spectra_metadata='full', include_mobility=True)
+        print('upload time flag: ' + str((time.time() - start)))
         mz_array = np.zeros(0)
         intensity_array = np.zeros(0)
         mobility_array = np.zeros(0)
+
         start = time.time()
         for i in range(0, len(data.coordinates)):
             mzs, ints, mobs = data.getspectrum(i)
@@ -113,7 +116,7 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
         contour_plot = px.density_contour(data_frame=contour, x='mz', y='mobility',
                                           marginal_x='histogram', marginal_y='histogram', histfunc='sum',
                                           nbinsx=20000, nbinsy=len(set(contour['mobility'])) // 2)
-        print(contour_plot)
+        #print(contour_plot)
         print('contour time flag: ' + str((time.time() - start)))
 
         start = time.time()
