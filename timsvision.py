@@ -14,7 +14,6 @@ app.layout = html.Div([
         html.Img(src='assets/timsvision_logo_mini.png', alt='TIMSvision Logo', width="375")
     ], style={'display': 'flex', 'justifyContent': 'center', 'padding': '25px'}, className='row'),
 
-#shift down
     html.Div(children=[
         html.Div(children=[
             html.H4('Input imzML File:'),
@@ -82,18 +81,27 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
     changed_id = [i['prop_id'] for i in callback_context.triggered][0]
 
     if 'update' in changed_id:
+        current = time.time()
+
         data = ImzMLParser(path, include_spectra_metadata='full', include_mobility=True)
+        print("1st time flag", (time.time()-current))
+        current = time.time()
         mz_array = np.zeros(0)
         intensity_array = np.zeros(0)
         mobility_array = np.zeros(0)
-        start = time.time()
+###       totalTime = time.time()
+###       print("Time in seconds since the epoch:", totalTime)
         for i in range(0, len(data.coordinates)):
+            startLoopTime = time.time()
             mzs, ints, mobs = data.getspectrum(i)
             mz_array = np.append(mz_array, mzs) #1
             intensity_array = np.append(intensity_array, ints)  #2
             mobility_array = np.append(mobility_array, mobs) #3
         print('loop time flag: ' + str((time.time() - start)))
-
+            #timestamp
+        endLoopTime = time.time()
+        print('loop: ' + str(endLoopTime-startLoopTime))
+        #print('total' + totalTime)
         data_df = pd.DataFrame(data={'mz': mz_array,
                                      'intensity': intensity_array,
                                      'mobility': mobility_array})
@@ -108,6 +116,7 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
         conn = sq.connect('{}.sqlite'.format('timsvisions_extension')) # creates file
         data_df.to_sql('timsvisions_extension', conn, if_exists='replace', index=False) # writes to file
         conn.close() # good practice: close connection
+        ion_image = getionimage(data, mz_value=float(mass), mz_tol=float(mass_tol), mob_value=float(ook0), mob_tol=float(ook0_tol))
 
         start = time.time()
         contour_plot = px.density_contour(data_frame=contour, x='mz', y='mobility',
@@ -120,6 +129,11 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
         ion_image_plot = px.imshow(ion_image, color_continuous_scale='viridis')
         print('ion time flag: ' + str((time.time() - start)))
 
+        startIon = time.time()
+        ion_image_plot = px.imshow(ion_image, color_continuous_scale='viridis')
+        #timestamp
+        endiontime = time.time()
+        print('ion: ' + str(startIon-endiontime))
         return [contour_plot, ion_image_plot, {'stored_path': path}]
 
 
