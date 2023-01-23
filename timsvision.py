@@ -4,69 +4,260 @@ import pandas as pd
 import plotly.express as px
 import time
 import sqlite3 as sq
-from dash import Dash, dcc, html, Input, Output, State, callback_context
+import base64
+from dash import Dash, dcc, html, State, callback_context
+from dash_extensions.enrich import Input, Output, DashProxy, MultiplexerTransform
+import dash_bootstrap_components as dbc
 from pyimzml.ImzMLParser import ImzMLParser, getionimage
 
-app = Dash(__name__)
 
-app.layout = html.Div([
-    html.Div(children=[
-        html.Img(src='assets/timsvision_logo_mini.png', alt='TIMSvision Logo', width="375")
-    ], style={'display': 'flex', 'justifyContent': 'center', 'padding': '25px'}, className='row'),
+# relative path for directory where uploaded data is stored
+UPLOAD_DIR = 'upload'
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
-#shifit down
-    html.Div(children=[
-        html.Div(children=[
-            html.H4('Input imzML File:'),
-        ], style={'width': '250px', 'display': 'flex', 'justifyContent': 'center', 'font-family': 'Times New Roman', 'font-size': '20px', 'width': '1440px', 'height': '25px', 'position':'relative', 'top':'-35px'}),
-        html.Div(children=[
-            dcc.Input(id='path', placeholder='imzML File', type='text')
-        ], style={'display': 'flex', 'justifyContent': 'center', 'width': '100%', 'padding' : '10px'})
-    ], className='row'),
+# Use DashProxy instead of Dash to allow for multiple callbacks to the same plot
+app = DashProxy(prevent_initial_callbacks=True, transforms=[MultiplexerTransform()])
 
-#blue border #0047AB
-    html.Div(children=[
-        html.Div(children=[
-            html.H5('m/z:'),
-        ], style={'display': 'inline-block', 'position':'relative', 'top':'90px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
-        html.Div(children=[
-            dcc.Input(id='mass', value=0, type='text'),
-        ], style={'position':'relative', 'top':'65px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px', 'border-color': '#0047AB'}),
-        html.Div(children=[
-            html.H5('m/z Tolerance:'),
-        ], style={'position':'relative', 'top':'60px', 'display': 'inline-block','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
-        html.Div(children=[
-            dcc.Input(id='mass_tol', value=0, type='text'),
-        ], style={'position':'relative', 'top':'35px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
-        html.Div(children=[
-            html.H5('1/K0:'),
-        ], style={'position':'relative', 'top':'30px', 'display': 'inline-block','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
-        html.Div(children=[
-            dcc.Input(id='ook0', value=0, type='text'),
-        ], style={'position':'relative', 'top':'5px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
-        html.Div(children=[
-            html.H5('1/K0 Tolerance:'),
-        ], style={'position':'relative', 'top':'0px', 'display': 'inline-block', 'font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
-        html.Div(children=[
-            dcc.Input(id='ook0_tol', value=0, type='text'),
-        ], style={'position':'relative', 'top':'-25px', 'width': '150px','font-family': 'Times New Roman', 'font-size': '20px', 'padding-left': '120px'}),
-        html.Div(children=[
-            html.Div(html.Button('Update Plots', id='update')),
-        ], style={'border-radius': '20px', 'display': 'inline-block', 'margin-right': '9vw', 'font-family': 'Times New Roman', 'font-size': '25px', 'position':'relative', 'top':'-10px', 'padding-left': '140px'}),
-        html.Div(children=[
-            dcc.Graph(id='image', figure={})
-        ], style={'border': '1px solid black','display': 'inline-block', 'vertical-align': 'top', 'position':'relative', 'top':'-350px'})
-    ], className='row'),
+app.layout = html.Div(
+    [
+        # logo element
+        html.Div(
+            children=[
+                html.Img(
+                    src='assets/timsvision_logo_mini.png',
+                    alt='TIMSvision Logo',
+                    width="375"
+                )
+            ],
+            style={
+                'display': 'flex',
+                'justifyContent': 'center',
+                'padding': '25px'},
+            className='row'
+        ),
 
-#label table, center second table
-    html.Div(children=[
-        html.Div(children=[
-            dcc.Graph(id='contour', figure={}),
-        ], style = {'border': '1px solid black', 'position':'relative', 'top':'-250px', 'width': '1250px', 'margin-right': '10vw'})
-    ], className='row'),
+        # upload element
+        html.Div(
+            dcc.Upload(
+                id='upload',
+                children=html.Div(
+                    [
+                        'Drag and Drop or ',
+                        html.A('Select mzML Files')
+                    ]
+                ),
+                style={
+                    'width': '97%',
+                    'height': '100px',
+                    'lineHeight': '100px',
+                    'borderWidth': '1px',
+                    'borderStyle': 'dashed',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    'margin': '20px'
+                },
+                multiple=True
+            )
+        ),
 
-    dcc.Store(id='stored_path')
-], style={'font-family': 'Lucida Sans Unicode'})
+        html.Div(
+            id='plots',
+            [
+                # ion image ui elements
+                html.Div(
+                    id='ion_image_block',
+                    children=[
+                        html.Div(
+                            children=[
+                                html.H5('m/z:'),
+                            ],
+                            style={
+                                'display': 'inline-block',
+                                'position': 'relative',
+                                'top': '90px',
+                                'font-family': 'Arial',
+                                'font-size': '20px',
+                                'padding-left': '120px'
+                            }
+                        ),
+                        html.Div(
+                            children=[
+                                dcc.Input(
+                                    id='mass',
+                                    value=0,
+                                    type='text'
+                                ),
+                            ],
+                            style={'position': 'relative',
+                                   'top': '65px',
+                                   'width': '150px',
+                                   'font-family': 'Arial',
+                                   'font-size': '20px',
+                                   'padding-left': '120px',
+                                   'border-color': '#0047AB'
+                                   }
+                        ),
+                        html.Div(
+                            children=[
+                                html.H5('m/z Tolerance:'),
+                            ],
+                            style={
+                                'position': 'relative',
+                                'top': '60px',
+                                'display': 'inline-block',
+                                'font-family': 'Arial',
+                                'font-size': '20px',
+                                'padding-left': '120px'
+                            }
+                        ),
+                        html.Div(
+                            children=[
+                                dcc.Input(
+                                    id='mass_tol',
+                                    value=0,
+                                    type='text'
+                                ),
+                            ],
+                            style={'position': 'relative',
+                                   'top': '35px',
+                                   'width': '150px',
+                                   'font-family': 'Arial',
+                                   'font-size': '20px',
+                                   'padding-left': '120px'}),
+                        html.Div(
+                            children=[
+                                html.H5('1/K0:'),
+                            ],
+                            style={
+                                'position': 'relative',
+                                'top': '30px',
+                                'display': 'inline-block',
+                                'font-family': 'Arial',
+                                'font-size': '20px',
+                                'padding-left': '120px'
+                            }
+                        ),
+                        html.Div(
+                            children=[
+                                dcc.Input(
+                                    id='ook0',
+                                    value=0,
+                                    type='text'
+                                ),
+                            ],
+                            style={
+                                'position': 'relative',
+                                'top': '5px',
+                                'width': '150px',
+                                'font-family': 'Arial',
+                                'font-size': '20px',
+                                'padding-left': '120px'
+                            }
+                        ),
+                        html.Div(
+                            children=[
+                                html.H5('1/K0 Tolerance:'),
+                            ],
+                            style={
+                                'position': 'relative',
+                                'top': '0px',
+                                'display': 'inline-block',
+                                'font-family': 'Arial',
+                                'font-size': '20px',
+                                'padding-left': '120px'
+                            }
+                        ),
+                        html.Div(
+                            children=[
+                                dcc.Input(
+                                    id='ook0_tol',
+                                    value=0,
+                                    type='text'
+                                ),
+                            ],
+                            style={
+                                'position': 'relative',
+                                'top': '-25px',
+                                'width': '150px',
+                                'font-family': 'Arial',
+                                'font-size': '20px',
+                                'padding-left': '120px'
+                            }
+                        ),
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    html.Button(
+                                        'Update Plots',
+                                        id='update'
+                                    )
+                                ),
+                            ],
+                            style={
+                                'border-radius': '20px',
+                                'display': 'inline-block',
+                                'margin-right': '9vw',
+                                'font-family': 'Arial',
+                                'font-size': '25px',
+                                'position': 'relative',
+                                'top': '-10px',
+                                'padding-left': '140px'
+                            }
+                        ),
+                        html.Div(
+                            id='ion_image',
+                            children=[
+                                dcc.Graph(id='image', figure={})
+                            ],
+                            style={
+                                'border': '1px solid black',
+                                'display': 'inline-block',
+                                'vertical-align': 'top',
+                                'position': 'relative',
+                                'top': '-350px'
+                            }
+                        )
+                    ],
+                    className='row'
+                ),
+
+                html.Div(
+                    id='contour_block',
+                    children=[
+                        html.Div(
+                            children=[
+                                dcc.Graph(id='contour', figure={}),
+                            ],
+                            style={
+                                'border': '1px solid black',
+                                'position': 'relative',
+                                'top': '-250px',
+                                'width': '1250px',
+                                'margin-right': '10vw'
+                            }
+                        )
+                    ],
+                    className='row'
+                )
+            ]
+        ),
+        dcc.Store(id='stored_path')
+    ],
+    style={
+        'font-family': 'Lucida Sans Unicode'
+    }
+)
+
+
+@app.callback(Output('plots', 'children'),
+              Input('upload', 'contents'),
+              State('upload', 'filename'))
+def upload_data(list_of_contents, list_of_filenames):
+    if list_of_contents is not None:
+        for contents, filename in zip(list_of_contents, list_of_filenames):
+            content_type, content_string = contents.split(',')
+            decoded = base64.b64decode(content_string)
 
 
 @app.callback(Output(component_id='contour', component_property='figure'),
@@ -138,11 +329,11 @@ def load_data(n_clicks, path, mass, mass_tol, ook0, ook0_tol):
 @app.callback(Output(component_id='mass', component_property='value'),
               Output(component_id='ook0', component_property='value'),
               Input('contour', 'clickData'),)
-
 def update_inputs(coords):
     mass = coords['points'][0]['x']
     ook0 = coords['points'][0]['y']
     return [mass, ook0]
+
 
 if __name__ == '__main__':
     app.run_server(debug=False, port=8051)
