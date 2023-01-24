@@ -49,7 +49,7 @@ git clone -c core.symlinks=true https://www.github.com/gtluu/timsvision
 ```
 6. Install dependencies.
 ```
-# pyMALDIproc dependencies
+# TIMSvision dependencies
 pip install -r /path/to/timsvision/requirements.txt
 ```
 7. You will also need to install a modified version of pyimzML. Currently, the necessary code is available on the

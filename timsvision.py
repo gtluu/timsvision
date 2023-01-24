@@ -44,24 +44,9 @@ app.layout = html.Div(
             children=[
                 html.Div(
                     children=[
-                        html.H4('Input imzML File:'),
-                    ],
-                    style={
-                        'width': '1440px',
-                        'height': '25px',
-                        'display': 'flex',
-                        'justifyContent': 'center',
-                        'font-family': 'Arial',
-                        'font-size': '20px',
-                        'position': 'relative',
-                        'top': '-35px'
-                    }
-                ),
-                html.Div(
-                    children=[
                         dcc.Input(
                             id='path',
-                            placeholder='imzML File',
+                            placeholder='imzML File Path',
                             type='text'
                         )
                     ],
@@ -109,14 +94,11 @@ app.layout = html.Div(
 
 def get_contour_plot(data_df):
     print('Contour Round')
-    print(data_df)
     contour_df = data_df.round({'mz': 4, 'mobility': 3})
-    print(contour_df)
     print('Contour Groupby')
     contour_df = contour_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
     print('Contour Subset')
     contour_df = contour_df[contour_df['intensity'] >= (np.max(contour_df['intensity']) * 0.0002)]
-    print(contour_df)
 
     print('Contour Plot')
     contour_plot = px.density_contour(data_frame=contour_df, x='mz', y='mobility',
@@ -333,12 +315,7 @@ def upload_data(n_clicks, path):
                 rows.append(pd.DataFrame({'mz': mzs,
                                           'intensity': ints,
                                           'mobility': mobs}))
-                #for mz, intensity, mob in zip(mzs.tolist(), ints.tolist(), mobs.tolist()):
-                #    rows.append({'mz': mz,
-                #                 'intensity': intensity,
-                #                 'mobility': mob})
             global DF
-            #DF = pd.DataFrame(data=rows)
             DF = pd.concat(rows)
             print('Getting Contour Plot')
             contour_child = get_contour_plot(DF)
