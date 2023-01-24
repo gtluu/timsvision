@@ -108,10 +108,15 @@ app.layout = html.Div(
 
 
 def get_contour_plot(data_df):
+    print('Contour Round')
+    print(data_df)
+    contour_df = data_df.round({'mz': 4, 'mobility': 3})
+    print(contour_df)
     print('Contour Groupby')
-    contour_df = data_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
+    contour_df = contour_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
     print('Contour Subset')
     contour_df = contour_df[contour_df['intensity'] >= (np.max(contour_df['intensity']) * 0.0002)]
+    print(contour_df)
 
     print('Contour Plot')
     contour_plot = px.density_contour(data_frame=contour_df, x='mz', y='mobility',
