@@ -1,3 +1,1 @@
-- large dataset not loading after getting contour plot and default ion image; need more ram?
 - move layout code to separate module
-- round mz/ook0 and bin with np.2dhistogram before pushing average spectrum df to density_contour?
