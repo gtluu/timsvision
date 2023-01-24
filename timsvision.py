@@ -108,9 +108,12 @@ app.layout = html.Div(
 
 
 def get_contour_plot(data_df):
+    print('Contour Groupby')
     contour_df = data_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
+    print('Contour Subset')
     contour_df = contour_df[contour_df['intensity'] >= (np.max(contour_df['intensity']) * 0.0002)]
 
+    print('Contour Plot')
     contour_plot = px.density_contour(data_frame=contour_df, x='mz', y='mobility',
                                       marginal_x='histogram', marginal_y='histogram', histfunc='sum',
                                       nbinsx=20000, nbinsy=len(set(contour_df['mobility'])) // 2)
@@ -134,14 +137,18 @@ def get_contour_plot(data_df):
     return children
 
 
-def get_ion_image(data, mass=0, mass_tol=0, ook0=0, ook0_tol=0):
-    ion_image = getionimage(data,
-                            mz_value=float(mass),
-                            mz_tol=float(mass_tol),
-                            mob_value=float(ook0),
-                            mob_tol=float(ook0_tol))
-
-    ion_image_plot = px.imshow(ion_image, color_continuous_scale='viridis')
+def get_ion_image(data, mass=0.0, mass_tol=0.0, ook0=0.0, ook0_tol=0.0, blank=False):
+    if not blank:
+        print('Not Blank')
+        ion_image = getionimage(data,
+                                mz_value=float(mass),
+                                mz_tol=float(mass_tol),
+                                mob_value=float(ook0),
+                                mob_tol=float(ook0_tol))
+        ion_image_plot = px.imshow(ion_image, color_continuous_scale='viridis')
+    elif blank:
+        print('Blank')
+        ion_image_plot = px.imshow(np.zeros((2, 2)), color_continuous_scale='viridis')
 
     children = [
         html.Div(
@@ -318,16 +325,20 @@ def upload_data(n_clicks, path):
             rows = []
             for i in range(0, len(DATA.coordinates)):
                 mzs, ints, mobs = DATA.getspectrum(i)
-                for mz, intensity, mob in zip(mzs.tolist(), ints.tolist(), mobs.tolist()):
-                    rows.append({'mz': mz,
-                                 'intensity': intensity,
-                                 'mobility': mob})
+                rows.append(pd.DataFrame({'mz': mzs,
+                                          'intensity': ints,
+                                          'mobility': mobs}))
+                #for mz, intensity, mob in zip(mzs.tolist(), ints.tolist(), mobs.tolist()):
+                #    rows.append({'mz': mz,
+                #                 'intensity': intensity,
+                #                 'mobility': mob})
             global DF
-            DF = pd.DataFrame(data=rows)
+            #DF = pd.DataFrame(data=rows)
+            DF = pd.concat(rows)
             print('Getting Contour Plot')
             contour_child = get_contour_plot(DF)
             print('Getting Overall Ion Image')
-            ion_image_child = get_ion_image(DATA)
+            ion_image_child = get_ion_image(DATA, mass_tol=0.05, ook0_tol=0.05, blank=True)
             return [contour_child, ion_image_child]
 
 
@@ -341,23 +352,30 @@ def update_ion_image(n_clicks, mass, mass_tol, ook0, ook0_tol):
     changed_id = [i['prop_id'] for i in callback_context.triggered][0]
 
     if 'update' in changed_id:
-        global DATA
-        print('Updating Ion Image')
-        return get_ion_image(DATA,
-                             mass=mass,
-                             mass_tol=mass_tol,
-                             ook0=ook0,
-                             ook0_tol=ook0_tol)
+        if n_clicks is not None:
+            global DATA
+            print('Updating Ion Image')
+            return get_ion_image(DATA,
+                                 mass=mass,
+                                 mass_tol=mass_tol,
+                                 ook0=ook0,
+                                 ook0_tol=ook0_tol)
 
 
-@app.callback(Output('mass', 'value'),
-              Output('ook0', 'value'),
-              Input('contour', 'clickData'),)
-def update_inputs(coords):
-    print('Updated Coordinates')
+@app.callback(Output('ion_image_block', 'children'),
+              Input('contour', 'clickData'),
+              State('mass_tol', 'value'),
+              State('ook0_tol', 'value'))
+def update_ion_image_from_contour(coords, mass_tol, ook0_tol):
+    global DATA
+    print('Updating Ion Image from Heatmap')
     mass = coords['points'][0]['x']
     ook0 = coords['points'][0]['y']
-    return [mass, ook0]
+    return get_ion_image(DATA,
+                         mass=mass,
+                         mass_tol=mass_tol,
+                         ook0=ook0,
+                         ook0_tol=ook0_tol)
 
 
 if __name__ == '__main__':
