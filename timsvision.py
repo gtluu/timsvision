@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import plotly.express as px
+#import plotly.graph_objects as px
 import time
 import sqlite3 as sq
 import base64
@@ -111,12 +112,12 @@ def get_contour_plot(data_df):
     start = time.time()
     contour_df = data_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
     contour_df = contour_df[contour_df['intensity'] >= (np.max(contour_df['intensity']) * 0.0002)]
-    print('contour df time flag: ' + str((time.time() - start)))
+    print('contour df time flag: ' + str((time.time() - start)/100000))
     start = time.time()
     contour_plot = px.density_contour(data_frame=contour_df, x='mz', y='mobility',
                                       marginal_x='histogram', marginal_y='histogram', histfunc='sum',
                                       nbinsx=20000, nbinsy=len(set(contour_df['mobility'])) // 2)
-    print('contour plot time flag: ' + str((time.time() - start)))
+    print('contour plot time flag: ' + str((time.time() - start)/100000))
 
     children = [
        html.Div(
@@ -133,7 +134,6 @@ def get_contour_plot(data_df):
            }
        )
     ]
-
     return children
 
 
@@ -316,15 +316,20 @@ def upload_data(n_clicks, path):
             print('Parsing imzML File')
             DATA = ImzMLParser(path, include_spectra_metadata='full', include_mobility=True)
             print('Creating Master DataFrame')
-            rows = []
+            rows = {'mz':[], 'intensity':[], 'mobility':[]}
             start = time.time()
+            inner_time = 0
             for i in range(0, len(DATA.coordinates)):
                 mzs, ints, mobs = DATA.getspectrum(i)
-                # for mz, intensity, mob in zip(mzs.tolist(), ints.tolist(), mobs.tolist()):
-                #     rows.append({'mz': mz,
-                #                  'intensity': intensity,
-                #                  'mobility': mob})
-            print('for loop time flag: ' + str((time.time() - start)))
+                inner = 0
+                inner = time.time()
+                for mz, intensity, mob in zip(mzs.tolist(), ints.tolist(), mobs.tolist()):
+                    rows['mz'].append(mz)
+                    rows['intensity'].append(intensity)
+                    rows['mobility'].append(mob)
+                    inner_time += time.time() - inner
+            print('inner_time: ' + str(inner_time/100000))
+            print('outer loop time flag: ' + str((time.time() - start)/100000))
             global DF
             DF = pd.DataFrame(data=rows)
             print('Getting Contour Plot')
@@ -359,9 +364,9 @@ def update_ion_image(n_clicks, mass, mass_tol, ook0, ook0_tol):
 
 def update_inputs(coords):
     print('Updated Coordinates')
-    mass = tuple(coords['points'][0]['x'])
+    mass = ['points', 0, 'x']
     print(mass)
-    ook0 = list(coords['points'][0]['y'])
+    ook0 = ['points',0,'y']
     print(ook0)
     return [mass, ook0]
 
