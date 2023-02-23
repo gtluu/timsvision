@@ -1,3 +1,7 @@
+# Demo Branch
+
+## This is a demo branch of TIMSvision using MALDI-TIMS-qTOF IMS data from MSV000088438
+
 # TIMSvision: a tool to visualize multidimensional imaging mass spectrometry datasets
 
 TIMSvision is a simple data visualization tool developed in Python 3.7 using Dash to be able to easily and quickly 
