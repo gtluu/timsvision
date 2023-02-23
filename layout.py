@@ -36,21 +36,37 @@ inital_layout = [
                         'top': '-35px'
                     }
                 ),
+
+                #drag and drop uploader
                 html.Div(
-                    children=[
-                        dcc.Input(
-                            id='path',
-                            placeholder='imzML File',
-                            type='text'
-                        )
-                    ],
-                    style={
-                        'display': 'flex',
-                        'justifyContent': 'center',
-                        'width': '100%',
-                        'padding': '10px'
-                    }
-                ),
+                [
+                    get_upload_component(id='path'), #ash-uploader
+                    html.Div(id='callback-output'),
+                ],
+                style={  # wrapper div style
+                    'textAlign': 'center',
+                    'justifyContent': 'center',
+                    'width': '400px',
+                    #'height': '50px',
+                    'padding': '10px',
+                    'display': 'inline-block'
+                }),
+
+                # html.Div(
+                #     children=[
+                #         dcc.Input(
+                #             id='path1',
+                #             placeholder='imzML File',
+                #             type='text'
+                #         )
+                #     ],
+                #     style={
+                #         'display': 'flex',
+                #         'justifyContent': 'center',
+                #         'width': '100%',
+                #         'padding': '10px'
+                #     }
+                # ),
                 html.Div(
                     children=[
                         html.Button(
@@ -66,8 +82,12 @@ inital_layout = [
                     }
                 )
             ],
+            style={
+            'textAlign': 'center',
+            },
             className='row',
         ),
+        
 
         # ion image ui elements
         html.Div(
