@@ -20,6 +20,7 @@ DF = None
 UPLOAD_DIR = 'upload'
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
+    print(UPLOAD_DIR)
 
 # Use DashProxy instead of Dash to allow for multiple callbacks to the same plot
 app = DashProxy(prevent_initial_callbacks=True, transforms=[MultiplexerTransform()])

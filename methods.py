@@ -1,6 +1,9 @@
 import numpy as np
 import plotly.express as px
 import time
+import uuid
+import dash_uploader as du
+
 from dash import Dash, dcc, html, State, callback_context
 from pyimzml.ImzMLParser import ImzMLParser, getionimage
 
@@ -214,4 +217,12 @@ def update_ion_image(n_clicks, mass, mass_tol, ook0, ook0_tol):
                              mass_tol=mass_tol,
                              ook0=ook0,
                              ook0_tol=ook0_tol)
+
+def get_upload_component(id):
+    return du.Upload(
+        id=id,
+        max_file_size=1800,  # 1800 Mb
+        filetypes=['csv', 'zip'],
+        upload_id=uuid.uuid1(),  # Unique session id
+    )                             
 
