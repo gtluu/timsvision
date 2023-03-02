@@ -6,6 +6,7 @@ import plotly.express as px
 import time
 import sqlite3 as sq
 import base64
+import re
 from layout import *
 
 import dash_uploader as du
@@ -21,17 +22,14 @@ DF = None
 UPLOAD_DIR = 'upload'
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
+path = 'none'
 
 # Use DashProxy instead of Dash to allow for multiple callbacks to the same plot
 app = DashProxy(prevent_initial_callbacks=True, transforms=[MultiplexerTransform()])
 
 # 1) configure the upload folder
-du.configure_upload(app, r"C:\tmp\Uploads")
-
-# 2) Use the Upload component
-app.layout = html.Div([
-    du.Upload(),
-])
+UPLOAD_FOLDER_ROOT = r"C:\tmp\Uploads"
+du.configure_upload(app, UPLOAD_FOLDER_ROOT)
 
 app.layout = html.Div(
     inital_layout,
@@ -40,40 +38,57 @@ app.layout = html.Div(
     }
 )
 
+@du.callback(
+    output=Output("callback-output", "children"),
+    id="dash-uploader",)
+def callback_on_completion(status: du.UploadStatus):
+    global path
+    path = html.Ul([html.Li(str(x)) for x in status.uploaded_files])
+    return path
+
+
 @app.callback(Output('contour_block', 'children'),
               Output('ion_image_block', 'children'),
               Input('load', 'n_clicks'),
-              State('path', 'value'))
-def upload_data(n_clicks, path):
-    changed_id = [i['prop_id'] for i in callback_context.triggered][0]
+            #   Input('path', 'value'))
+              Output("callback-output", "children"))
 
+def upload_data(n_clicks):
+    changed_id = [i['prop_id'] for i in callback_context.triggered][0]
     if 'load' in changed_id:
-        if path.lower().endswith('imzml'):
-            global DATA
-            print('Parsing imzML File')
-            DATA = ImzMLParser(path, include_spectra_metadata='full', include_mobility=True)
-            print('Creating Master DataFrame')
-            rows = {'mz':[], 'intensity':[], 'mobility':[]}
-            start = time.time()
-            inner_time = 0
-            for i in range(0, len(DATA.coordinates)):
-                mzs, ints, mobs = DATA.getspectrum(i)
-                inner = 0
-                inner = time.time()
-                for mz, intensity, mob in zip(mzs.tolist(), ints.tolist(), mobs.tolist()):
-                    rows['mz'].append(mz)
-                    rows['intensity'].append(intensity)
-                    rows['mobility'].append(mob)
-                    inner_time += time.time() - inner
-            print('inner_time: ' + str(inner_time/100000))
-            print('outer loop time flag: ' + str((time.time() - start)/100000))
-            global DF
-            DF = pd.DataFrame(data=rows)
-            print('Getting Contour Plot')
-            contour_child = get_contour_plot(DF)
-            print('Getting Overall Ion Image')
-            ion_image_child = get_ion_image(DATA)
-            return [contour_child, ion_image_child]
+        global DATA
+        print('Parsing imzML File')
+        # global path
+        # path = str(path)
+        # path = path.replace("'", '"')
+        # path = re.findall('"([^"]*)"', path)
+        # path = ''.join(path)
+        # path = removeConsecutiveDuplicates(path)
+        # print(path)
+        x = 'C:\\tmp\\Uploads/245f9c8-b92c-1ed-8279-da9d82fc693e/tims.imzML'
+        DATA = ImzMLParser(x, include_spectra_metadata='full', include_mobility=True)
+        print('Creating Master DataFrame')
+        rows = {'mz':[], 'intensity':[], 'mobility':[]}
+        start = time.time()
+        inner_time = 0
+        for i in range(0, len(DATA.coordinates)):
+            mzs, ints, mobs = DATA.getspectrum(i)
+            inner = 0
+            inner = time.time()
+            for mz, intensity, mob in zip(mzs.tolist(), ints.tolist(), mobs.tolist()):
+                rows['mz'].append(mz)
+                rows['intensity'].append(intensity)
+                rows['mobility'].append(mob)
+                inner_time += time.time() - inner
+        print('inner_time: ' + str(inner_time/100000))
+        print('outer loop time flag: ' + str((time.time() - start)/100000))
+        global DF
+        DF = pd.DataFrame(data=rows)
+        print('Getting Contour Plot')
+        contour_child = get_contour_plot(DF)
+        print('Getting Overall Ion Image')
+        ion_image_child = get_ion_image(DATA)
+    return [path, contour_child, ion_image_child]
 
 
 @app.callback(Output('ion_image_block', 'children'),
@@ -108,4 +123,4 @@ def update_inputs(coords):
     return [mass, ook0]
 
 if __name__ == '__main__':
-    app.run_server(debug=False, port=8051)
+    app.run_server(debug=False, port=8052)

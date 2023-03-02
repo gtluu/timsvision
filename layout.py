@@ -40,7 +40,7 @@ inital_layout = [
                 #drag and drop uploader
                 html.Div(
                 [
-                    get_upload_component(id='path'), #ash-uploader
+                    get_upload_component(id='dash-uploader'), #ash-uploader
                     html.Div(id='callback-output'),
                 ],
                 style={  # wrapper div style
@@ -67,6 +67,7 @@ inital_layout = [
                 #         'padding': '10px'
                 #     }
                 # ),
+
                 html.Div(
                     children=[
                         html.Button(

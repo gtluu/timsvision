@@ -20,7 +20,6 @@ DF = None
 UPLOAD_DIR = 'upload'
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
-    print(UPLOAD_DIR)
 
 # Use DashProxy instead of Dash to allow for multiple callbacks to the same plot
 app = DashProxy(prevent_initial_callbacks=True, transforms=[MultiplexerTransform()])
@@ -379,7 +378,7 @@ def update_inputs(coords, mass_tol, ook0_tol):
                          ook0_tol=ook0_tol)
 
 if __name__ == '__main__':
-    app.run_server(debug=False, port=8050)
+    app.run_server(debug=False, port=8052)
     # profile = line_profiler.LineProfiler()
     # results = profile(process_df)()
     # profile.print_stats()
