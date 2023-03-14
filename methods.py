@@ -10,6 +10,7 @@ from pyimzml.ImzMLParser import ImzMLParser, getionimage
 def get_contour_plot(data_df):
     print('contour start')
     start = time.time()
+    data_df.sort_values(by='mz', inplace=True)
     contour_df = data_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
     contour_df = contour_df[contour_df['intensity'] >= (np.max(contour_df['intensity']) * 0.0002)]
     contour_df = contour_df.round({'mz': 4, 'mobility': 3})

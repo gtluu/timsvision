@@ -37,36 +37,36 @@ inital_layout = [
                     }
                 ),
 
-                #drag and drop uploader
-                html.Div(
-                [
-                    get_upload_component(id='dash-uploader'), #ash-uploader
-                    html.Div(id='callback-output'),
-                ],
-                style={  # wrapper div style
-                    'textAlign': 'center',
-                    'justifyContent': 'center',
-                    'width': '400px',
-                    #'height': '50px',
-                    'padding': '10px',
-                    'display': 'inline-block'
-                }),
-
+                # #drag and drop uploader
                 # html.Div(
-                #     children=[
-                #         dcc.Input(
-                #             id='path1',
-                #             placeholder='imzML File',
-                #             type='text'
-                #         )
-                #     ],
-                #     style={
-                #         'display': 'flex',
-                #         'justifyContent': 'center',
-                #         'width': '100%',
-                #         'padding': '10px'
-                #     }
-                # ),
+                # [
+                #     get_upload_component(id='dash-uploader'), #ash-uploader
+                #     html.Div(id='callback-output'),
+                # ],
+                # style={  # wrapper div style
+                #     'textAlign': 'center',
+                #     'justifyContent': 'center',
+                #     'width': '400px',
+                #     #'height': '50px',
+                #     'padding': '10px',
+                #     'display': 'inline-block'
+                # }),
+
+                html.Div(
+                    children=[
+                        dcc.Input(
+                            id='path1',
+                            placeholder='imzML File',
+                            type='text'
+                        )
+                    ],
+                    style={
+                        'display': 'flex',
+                        'justifyContent': 'center',
+                        'width': '100%',
+                        'padding': '10px'
+                    }
+                ),
 
                 html.Div(
                     children=[
