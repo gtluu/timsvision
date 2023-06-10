@@ -8,7 +8,6 @@ import base64
 from dash import Dash, dcc, html, State, callback_context
 from dash_extensions.enrich import Input, Output, DashProxy, MultiplexerTransform
 import dash_bootstrap_components as dbc
-from pyimzml.ImzMLParser import ImzMLParser, getionimage
 
 
 # relative path for directory where uploaded data is stored
