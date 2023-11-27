@@ -5,3 +5,5 @@ dash-extensions
 dash-bootstrap-components
 dash-uploader
 plotly
+git+https://github.com/gtluu/pyimzML.git
+git+https://github.com/gtluu/pyTDFSDK.git
