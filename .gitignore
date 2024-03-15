@@ -4,3 +4,4 @@ prototype/
 venv/
 timsvisions_extension.sqlite
 upload/
+*/__pycache__
