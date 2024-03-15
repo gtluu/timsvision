@@ -41,15 +41,15 @@ def get_ion_image(data, mass=0.0, mass_tol=0.0, ook0=0.0, ook0_tol=0.0, blank=Fa
     return ion_image_layout(mass, mass_tol, ook0, ook0_tol, ion_image_plot)
 
 
-def get_global_df(data):
+def get_global_df(list_of_spectra):
     rows = []
-    for i in range(0, len(data.coordinates)):
-        mzs, ints, mobs = data.getspectrum(i)
-        rows.append(pd.DataFrame({'mz': mzs,
-                                  'intensity': ints,
-                                  'mobility': mobs}))
+    for i in list_of_spectra:
+        rows.append(pd.DataFrame({'mz': i.mz_array,
+                                  'intensity': i.intensity_array,
+                                  'mobility': i.mobility_array}))
     data_df = pd.concat(rows)
-    data_df = data_df.round({'mz': 4, 'mobility': 3})
+    #data_df = data_df.round({'mz': 4, 'mobility': 3})
     data_df = data_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
-    data_df = data_df[data_df['intensity'] >= (np.max(data_df['intensity']) * 0.0001)]
+    #data_df = data_df[data_df['intensity'] >= (np.max(data_df['intensity']) * 0.0001)]
+    print(data_df)
     return data_df
