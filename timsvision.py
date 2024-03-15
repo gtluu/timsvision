@@ -8,6 +8,7 @@ import base64
 from dash import Dash, dcc, html, State, callback_context
 from dash_extensions.enrich import Input, Output, DashProxy, MultiplexerTransform
 import dash_bootstrap_components as dbc
+from pyimzml.ImzMLParser import ImzMLParser, getionimage
 
 
 # relative path for directory where uploaded data is stored
@@ -113,7 +114,7 @@ def get_contour_plot(data_df):
            style={
                'border': '1px solid black',
                'position': 'relative',
-               'top': '-250px',
+               'top': '250px',
                'width': '1250px',
                'margin-right': '10vw'
            }
