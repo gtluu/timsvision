@@ -8,6 +8,8 @@ import base64
 from dash import Dash, dcc, html, State, callback_context
 from dash_extensions.enrich import Input, Output, DashProxy, MultiplexerTransform
 import dash_bootstrap_components as dbc
+from timsvision.layout import *
+from pyimzml.ImzMLParser import getionimage
 
 
 def import_bruker():
@@ -18,7 +20,7 @@ def get_contour_plot(data_df):
     print('Contour Plot')
     contour_plot = px.density_contour(data_frame=data_df, x='mz', y='mobility',
                                       marginal_x='histogram', marginal_y='histogram', histfunc='sum',
-                                      nbinsx=20000, nbinsy=len(set(contour_df['mobility'])) // 2)
+                                      nbinsx=20000, nbinsy=len(set(data_df['mobility'])) // 2)
 
     return contour_plot_layout(contour_plot)
 

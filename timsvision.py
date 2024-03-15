@@ -10,6 +10,7 @@ from dash_extensions.enrich import Input, Output, DashProxy, MultiplexerTransfor
 import dash_bootstrap_components as dbc
 from timsvision.layout import main_app_layout, contour_plot_layout, ion_image_layout
 from timsvision.util import get_contour_plot, get_ion_image, get_global_df
+from pyimzml.ImzMLParser import ImzMLParser
 
 
 # relative path for directory where uploaded data is stored
@@ -33,10 +34,13 @@ def upload_data(n_clicks, path):
     changed_id = [i['prop_id'] for i in callback_context.triggered][0]
 
     if 'load' in changed_id:
-        if path.lower().endswith('imzml'):
+        #if path.lower().endswith('imzml'):
+        if True:
             global DATA
             print('Parsing imzML File')
-            DATA = ImzMLParser(path, include_spectra_metadata='full', include_mobility=True)
+            #DATA = ImzMLParser(path, include_spectra_metadata='full', include_mobility=True)
+            DATA = ImzMLParser('C:\\Users\\bass\\code\\timsvision\\prototype\\20210921_vc_rugose_tims_gordon.imzML',
+                               include_spectra_metadata='full', include_mobility=True)
             print('Creating Master DataFrame')
             global DF
             DF = get_global_df(DATA)
@@ -52,7 +56,8 @@ def upload_data(n_clicks, path):
               State('mass', 'value'),
               State('mass_tol', 'value'),
               State('ook0', 'value'),
-              State('ook0_tol', 'value'))
+              State('ook0_tol', 'value'),
+              prevent_initial_call=True)
 def update_ion_image(n_clicks, mass, mass_tol, ook0, ook0_tol):
     changed_id = [i['prop_id'] for i in callback_context.triggered][0]
 
@@ -70,7 +75,8 @@ def update_ion_image(n_clicks, mass, mass_tol, ook0, ook0_tol):
 @app.callback(Output('ion_image_block', 'children'),
               Input('contour', 'clickData'),
               State('mass_tol', 'value'),
-              State('ook0_tol', 'value'))
+              State('ook0_tol', 'value'),
+              prevent_initial_call=True)
 def update_ion_image_from_contour(coords, mass_tol, ook0_tol):
     global DATA
     print('Updating Ion Image from Heatmap')
