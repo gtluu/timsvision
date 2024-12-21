@@ -9,7 +9,6 @@ from dash import Dash, dcc, html, State, callback_context
 from dash_extensions.enrich import Input, Output, DashProxy, MultiplexerTransform
 import dash_bootstrap_components as dbc
 
-
 main_app_layout = html.Div(
     [
         # logo element
@@ -66,14 +65,168 @@ main_app_layout = html.Div(
 
         # ion image ui elements
         html.Div(
-            id='ion_image_block',
-            className='row'
+            children=[
+                html.Div(
+                    children=[
+                        html.H5('m/z:'),
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'position': 'relative',
+                        'top': '90px',
+                        'font-family': 'Arial',
+                        'font-size': '20px',
+                        'padding-left': '120px'
+                    }
+                ),
+                html.Div(
+                    children=[
+                        dcc.Input(
+                            id='mass',
+                            value=0,
+                            type='text'
+                        ),
+                    ],
+                    style={'position': 'relative',
+                           'top': '65px',
+                           'width': '150px',
+                           'font-family': 'Arial',
+                           'font-size': '20px',
+                           'padding-left': '120px',
+                           'border-color': '#0047AB'
+                           }
+                ),
+                html.Div(
+                    children=[
+                        html.H5('m/z Tolerance:'),
+                    ],
+                    style={
+                        'position': 'relative',
+                        'top': '60px',
+                        'display': 'inline-block',
+                        'font-family': 'Arial',
+                        'font-size': '20px',
+                        'padding-left': '120px'
+                    }
+                ),
+                html.Div(
+                    children=[
+                        dcc.Input(
+                            id='mass_tol',
+                            value=0.05,
+                            type='text'
+                        ),
+                    ],
+                    style={'position': 'relative',
+                           'top': '35px',
+                           'width': '150px',
+                           'font-family': 'Arial',
+                           'font-size': '20px',
+                           'padding-left': '120px'}),
+                html.Div(
+                    children=[
+                        html.H5('1/K0:'),
+                    ],
+                    style={
+                        'position': 'relative',
+                        'top': '30px',
+                        'display': 'inline-block',
+                        'font-family': 'Arial',
+                        'font-size': '20px',
+                        'padding-left': '120px'
+                    }
+                ),
+                html.Div(
+                    children=[
+                        dcc.Input(
+                            id='ook0',
+                            value=0,
+                            type='text'
+                        ),
+                    ],
+                    style={
+                        'position': 'relative',
+                        'top': '5px',
+                        'width': '150px',
+                        'font-family': 'Arial',
+                        'font-size': '20px',
+                        'padding-left': '120px'
+                    }
+                ),
+                html.Div(
+                    children=[
+                        html.H5('1/K0 Tolerance:'),
+                    ],
+                    style={
+                        'position': 'relative',
+                        'top': '0px',
+                        'display': 'inline-block',
+                        'font-family': 'Arial',
+                        'font-size': '20px',
+                        'padding-left': '120px'
+                    }
+                ),
+                html.Div(
+                    children=[
+                        dcc.Input(
+                            id='ook0_tol',
+                            value=0.05,
+                            type='text'
+                        ),
+                    ],
+                    style={
+                        'position': 'relative',
+                        'top': '-25px',
+                        'width': '150px',
+                        'font-family': 'Arial',
+                        'font-size': '20px',
+                        'padding-left': '120px'
+                    }
+                ),
+                html.Div(
+                    children=[
+                        html.Div(
+                            html.Button(
+                                'Update Ion Image',
+                                id='update'
+                            )
+                        ),
+                    ],
+                    style={
+                        'border-radius': '20px',
+                        'display': 'inline-block',
+                        'margin-right': '9vw',
+                        'font-family': 'Arial',
+                        'font-size': '25px',
+                        'position': 'relative',
+                        'top': '-10px',
+                        'padding-left': '140px'
+                    }
+                ),
+                html.Div(
+                    id='ion_image',
+                    children=[
+                        dcc.Graph(
+                            id='image',
+                            figure=px.imshow(np.zeros((2, 2)), color_continuous_scale='viridis')
+                        )
+                    ],
+                    style={
+                        'display': 'inline-block',
+                        'vertical-align': 'top',
+                        'position': 'relative',
+                        'top': '-350px'
+                    }
+                )
+            ]
         ),
 
         html.Div(
             id='contour_block',
             className='row'
         ),
+
+        dcc.Loading(dcc.Store(id='store_plot'))
     ],
     style={
         'font-family': 'Lucida Sans Unicode'
@@ -83,176 +236,17 @@ main_app_layout = html.Div(
 
 def contour_plot_layout(contour_plot):
     return [
-       html.Div(
-           dcc.Graph(
-               id='contour',
-               figure=contour_plot
-           ),
-           style={
-               'border': '1px solid black',
-               'position': 'relative',
-               'top': '-250px',
-               'width': '1250px',
-               'margin-right': '10vw'
-           }
-       )
-    ]
-
-
-def ion_image_layout(mass, mass_tol, ook0, ook0_tol, ion_image_plot):
-    return [
         html.Div(
-            children=[
-                html.H5('m/z:'),
-            ],
-            style={
-                'display': 'inline-block',
-                'position': 'relative',
-                'top': '90px',
-                'font-family': 'Arial',
-                'font-size': '20px',
-                'padding-left': '120px'
-            }
-        ),
-        html.Div(
-            children=[
-                dcc.Input(
-                    id='mass',
-                    value=mass,
-                    type='text'
-                ),
-            ],
-            style={'position': 'relative',
-                   'top': '65px',
-                   'width': '150px',
-                   'font-family': 'Arial',
-                   'font-size': '20px',
-                   'padding-left': '120px',
-                   'border-color': '#0047AB'
-                   }
-        ),
-        html.Div(
-            children=[
-                html.H5('m/z Tolerance:'),
-            ],
+            dcc.Graph(
+                id='contour',
+                figure=contour_plot
+            ),
             style={
                 'position': 'relative',
-                'top': '60px',
-                'display': 'inline-block',
-                'font-family': 'Arial',
-                'font-size': '20px',
-                'padding-left': '120px'
-            }
-        ),
-        html.Div(
-            children=[
-                dcc.Input(
-                    id='mass_tol',
-                    value=mass_tol,
-                    type='text'
-                ),
-            ],
-            style={'position': 'relative',
-                   'top': '35px',
-                   'width': '150px',
-                   'font-family': 'Arial',
-                   'font-size': '20px',
-                   'padding-left': '120px'}),
-        html.Div(
-            children=[
-                html.H5('1/K0:'),
-            ],
-            style={
-                'position': 'relative',
-                'top': '30px',
-                'display': 'inline-block',
-                'font-family': 'Arial',
-                'font-size': '20px',
-                'padding-left': '120px'
-            }
-        ),
-        html.Div(
-            children=[
-                dcc.Input(
-                    id='ook0',
-                    value=ook0,
-                    type='text'
-                ),
-            ],
-            style={
-                'position': 'relative',
-                'top': '5px',
-                'width': '150px',
-                'font-family': 'Arial',
-                'font-size': '20px',
-                'padding-left': '120px'
-            }
-        ),
-        html.Div(
-            children=[
-                html.H5('1/K0 Tolerance:'),
-            ],
-            style={
-                'position': 'relative',
-                'top': '0px',
-                'display': 'inline-block',
-                'font-family': 'Arial',
-                'font-size': '20px',
-                'padding-left': '120px'
-            }
-        ),
-        html.Div(
-            children=[
-                dcc.Input(
-                    id='ook0_tol',
-                    value=ook0_tol,
-                    type='text'
-                ),
-            ],
-            style={
-                'position': 'relative',
-                'top': '-25px',
-                'width': '150px',
-                'font-family': 'Arial',
-                'font-size': '20px',
-                'padding-left': '120px'
-            }
-        ),
-        html.Div(
-            children=[
-                html.Div(
-                    html.Button(
-                        'Update Ion Image',
-                        id='update'
-                    )
-                ),
-            ],
-            style={
-                'border-radius': '20px',
-                'display': 'inline-block',
-                'margin-right': '9vw',
-                'font-family': 'Arial',
-                'font-size': '25px',
-                'position': 'relative',
-                'top': '-10px',
-                'padding-left': '140px'
-            }
-        ),
-        html.Div(
-            id='ion_image',
-            children=[
-                dcc.Graph(
-                    id='image',
-                    figure=ion_image_plot
-                )
-            ],
-            style={
-                'border': '1px solid black',
-                'display': 'inline-block',
-                'vertical-align': 'top',
-                'position': 'relative',
-                'top': '-350px'
+                'top': '-250px',
+                'width': '1250px',
+                'height': '1250px',
+                'margin-right': '10vw'
             }
         )
     ]
-

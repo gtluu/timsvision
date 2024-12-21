@@ -1,57 +1,268 @@
-import os
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import time
-import sqlite3 as sq
-import base64
-from dash import Dash, dcc, html, State, callback_context, no_update
+from dash import dcc, html, State, callback_context
 from dash_extensions.enrich import Input, Output, DashProxy, MultiplexerTransform
-import dash_bootstrap_components as dbc
-from timsvision.layout import main_app_layout, contour_plot_layout, ion_image_layout
-from timsvision.util import get_contour_plot, get_ion_image, get_global_df
-from pyTDFSDK.classes import TdfData, TdfSpectrum
-from pyTDFSDK.init_tdf_sdk import init_tdf_sdk_api
+from pyimzml.ImzMLParser import ImzMLParser, getionimage
 
 
-# relative path for directory where uploaded data is stored
-DATA = None
-DF = None
-UPLOAD_DIR = 'upload'
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
-DLL = init_tdf_sdk_api()
+def get_contour_plot(data_df):
+    print('Contour Round')
+    contour_df = data_df.round({'mz': 4, 'mobility': 3})
+    print('Contour Groupby')
+    contour_df = contour_df.groupby(['mz', 'mobility'], as_index=False).aggregate(sum)
+    print('Contour Subset')
+    contour_df = contour_df[contour_df['intensity'] >= (np.max(contour_df['intensity']) * 0.0002)]
+
+    print('Contour Plot')
+    contour_plot = px.density_contour(data_frame=contour_df, x='mz', y='mobility',
+                                      marginal_x='histogram', marginal_y='histogram', histfunc='sum',
+                                      nbinsx=5000, nbinsy=len(set(contour_df['mobility'])) // 2)
+
+    children = [
+       html.Div(
+           dcc.Graph(
+               id='contour',
+               figure=contour_plot
+           ),
+           style={
+               'border': '1px solid black',
+               'position': 'relative',
+               'top': '-250px',
+               'width': '1250px',
+               'margin-right': '10vw'
+           }
+       )
+    ]
+
+    return children
+
+
+def get_ion_image(data, mass=0.0, mass_tol=0.0, ook0=0.0, ook0_tol=0.0, blank=False):
+    if not blank:
+        print('Not Blank')
+        ion_image = getionimage(data,
+                                mz_value=float(mass),
+                                mz_tol=float(mass_tol),
+                                mob_value=float(ook0),
+                                mob_tol=float(ook0_tol))
+        ion_image_plot = px.imshow(ion_image, color_continuous_scale='viridis')
+    elif blank:
+        print('Blank')
+        ion_image_plot = px.imshow(np.zeros((2, 2)), color_continuous_scale='viridis')
+
+    children = [
+        html.Div(
+            children=[
+                html.H5('m/z:'),
+            ],
+            style={
+                'display': 'inline-block',
+                'position': 'relative',
+                'top': '90px',
+                'font-family': 'Arial',
+                'font-size': '20px',
+                'padding-left': '120px'
+            }
+        ),
+        html.Div(
+            children=[
+                dcc.Input(
+                    id='mass',
+                    value=mass,
+                    type='text'
+                ),
+            ],
+            style={'position': 'relative',
+                   'top': '65px',
+                   'width': '150px',
+                   'font-family': 'Arial',
+                   'font-size': '20px',
+                   'padding-left': '120px',
+                   'border-color': '#0047AB'
+                   }
+        ),
+        html.Div(
+            children=[
+                html.H5('m/z Tolerance:'),
+            ],
+            style={
+                'position': 'relative',
+                'top': '60px',
+                'display': 'inline-block',
+                'font-family': 'Arial',
+                'font-size': '20px',
+                'padding-left': '120px'
+            }
+        ),
+        html.Div(
+            children=[
+                dcc.Input(
+                    id='mass_tol',
+                    value=mass_tol,
+                    type='text'
+                ),
+            ],
+            style={'position': 'relative',
+                   'top': '35px',
+                   'width': '150px',
+                   'font-family': 'Arial',
+                   'font-size': '20px',
+                   'padding-left': '120px'}),
+        html.Div(
+            children=[
+                html.H5('1/K0:'),
+            ],
+            style={
+                'position': 'relative',
+                'top': '30px',
+                'display': 'inline-block',
+                'font-family': 'Arial',
+                'font-size': '20px',
+                'padding-left': '120px'
+            }
+        ),
+        html.Div(
+            children=[
+                dcc.Input(
+                    id='ook0',
+                    value=ook0,
+                    type='text'
+                ),
+            ],
+            style={
+                'position': 'relative',
+                'top': '5px',
+                'width': '150px',
+                'font-family': 'Arial',
+                'font-size': '20px',
+                'padding-left': '120px'
+            }
+        ),
+        html.Div(
+            children=[
+                html.H5('1/K0 Tolerance:'),
+            ],
+            style={
+                'position': 'relative',
+                'top': '0px',
+                'display': 'inline-block',
+                'font-family': 'Arial',
+                'font-size': '20px',
+                'padding-left': '120px'
+            }
+        ),
+        html.Div(
+            children=[
+                dcc.Input(
+                    id='ook0_tol',
+                    value=ook0_tol,
+                    type='text'
+                ),
+            ],
+            style={
+                'position': 'relative',
+                'top': '-25px',
+                'width': '150px',
+                'font-family': 'Arial',
+                'font-size': '20px',
+                'padding-left': '120px'
+            }
+        ),
+        html.Div(
+            children=[
+                html.Div(
+                    html.Button(
+                        'Update Ion Image',
+                        id='update'
+                    )
+                ),
+            ],
+            style={
+                'border-radius': '20px',
+                'display': 'inline-block',
+                'margin-right': '9vw',
+                'font-family': 'Arial',
+                'font-size': '25px',
+                'position': 'relative',
+                'top': '-10px',
+                'padding-left': '140px'
+            }
+        ),
+        html.Div(
+            id='ion_image',
+            children=[
+                dcc.Graph(
+                    id='image',
+                    figure=ion_image_plot
+                )
+            ],
+            style={
+                'border': '1px solid black',
+                'display': 'inline-block',
+                'vertical-align': 'top',
+                'position': 'relative',
+                'top': '-350px'
+            }
+        )
+    ]
+
+    return children
+
+
+print('Parsing imzML File')
+DATA = ImzMLParser('C:\\Users\\bass\\data\\prm_pasef\\maldi_pos_ms2_tims_prmpasef_mobility_based_maldi2_msi_mz622_ScanNum748-827.imzML', include_spectra_metadata='full', include_mobility=True)
+print('Creating Master DataFrame')
+rows = []
+for i in range(0, len(DATA.coordinates)):
+    mzs, ints, mobs = DATA.getspectrum(i)
+    rows.append(pd.DataFrame({'mz': mzs,
+                              'intensity': ints,
+                              'mobility': mobs}))
+DF = pd.concat(rows)
+print('Getting Contour Plot')
+contour_child = get_contour_plot(DF)
+print('Getting Overall Ion Image')
+ion_image_child = get_ion_image(DATA, mass_tol=0.05, ook0_tol=0.05, blank=True)
 
 # Use DashProxy instead of Dash to allow for multiple callbacks to the same plot
 app = DashProxy(prevent_initial_callbacks=True, transforms=[MultiplexerTransform()])
 
-app.layout = main_app_layout
+app.layout = html.Div(
+    [
+        # logo element
+        html.Div(
+            children=[
+                html.Img(
+                    src='assets/timsvision_logo_mini.png',
+                    alt='TIMSvision Logo',
+                    width="375"
+                )
+            ],
+            style={
+                'display': 'flex',
+                'justifyContent': 'center',
+                'padding': '25px'},
+            className='row'
+        ),
 
+        # ion image ui elements
+        html.Div(
+            id='ion_image_block',
+            children=ion_image_child,
+            className='row'
+        ),
 
-@app.callback(Output('contour_block', 'children'),
-              Output('ion_image_block', 'children'),
-              Input('load', 'n_clicks'),
-              State('path', 'value'))
-def upload_data(n_clicks, path):
-    changed_id = [i['prop_id'] for i in callback_context.triggered][0]
-
-    if 'load' in changed_id:
-        #if path.lower().endswith('tdf'):
-        if True:
-            global DATA
-            print('Parsing TDF File')
-            DATA = TdfData('prototype\\maldi_ms1_tims_msi.d', DLL)
-            list_of_spectra = [TdfSpectrum(DATA, frame=int(row['Id']), mode='raw')
-                               for index, row in DATA.analysis['Frames'].iterrows()]
-            print('Creating Master DataFrame')
-            global DF
-            #DF = get_global_df(DATA)
-            DF = get_global_df(list_of_spectra)
-            print('Getting Contour Plot')
-            contour_child = get_contour_plot(DF)
-            print('Getting Overall Ion Image')
-            ion_image_child = get_ion_image(DATA, mass_tol=0.05, ook0_tol=0.05, blank=True)
-            return [contour_child, ion_image_child]
+        html.Div(
+            id='contour_block',
+            children=contour_child,
+            className='row'
+        ),
+    ],
+    style={
+        'font-family': 'Lucida Sans Unicode'
+    }
+)
 
 
 @app.callback(Output('ion_image_block', 'children'),
@@ -59,8 +270,7 @@ def upload_data(n_clicks, path):
               State('mass', 'value'),
               State('mass_tol', 'value'),
               State('ook0', 'value'),
-              State('ook0_tol', 'value'),
-              prevent_initial_call=True)
+              State('ook0_tol', 'value'))
 def update_ion_image(n_clicks, mass, mass_tol, ook0, ook0_tol):
     changed_id = [i['prop_id'] for i in callback_context.triggered][0]
 
@@ -78,8 +288,7 @@ def update_ion_image(n_clicks, mass, mass_tol, ook0, ook0_tol):
 @app.callback(Output('ion_image_block', 'children'),
               Input('contour', 'clickData'),
               State('mass_tol', 'value'),
-              State('ook0_tol', 'value'),
-              prevent_initial_call=True)
+              State('ook0_tol', 'value'))
 def update_ion_image_from_contour(coords, mass_tol, ook0_tol):
     global DATA
     print('Updating Ion Image from Heatmap')
@@ -92,9 +301,5 @@ def update_ion_image_from_contour(coords, mass_tol, ook0_tol):
                          ook0_tol=ook0_tol)
 
 
-def main():
-    app.run_server(debug=False, port=8050)
-
-
 if __name__ == '__main__':
-    main()
+    app.run_server(debug=False, port=8050)

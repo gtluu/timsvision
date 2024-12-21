@@ -5,3 +5,4 @@ venv/
 timsvisions_extension.sqlite
 upload/
 */__pycache__
+/file_system_backend
